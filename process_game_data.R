@@ -1,12 +1,4 @@
-library(jsonlite)
-library(listviewer)
-library(stringr)
-library(tidyverse)
-
-# Setup
-options(stringsAsFactors = FALSE)
-cat(rep("\n", 40)) # Buffer console
-remove(list = ls()) # Clear environment
+source("01_setup.R")
 
 # Read raw JSON data, create drives list
 gameData <- jsonlite::fromJSON("data\\VT-duke_2016.json")
@@ -22,8 +14,8 @@ remove(i)
 numPlays <- length(text)
 
 
-
 type <- vector(mode = "integer", length = numPlays)
+typeText <- vector(mode = "character", length = numPlays)
 yardage <-  vector(mode = "integer",length = numPlays)
 downAndDistBefore <- vector(mode = "character", length = numPlays)
 downAndDistAfter <- vector(mode = "character", length = numPlays)
@@ -35,7 +27,8 @@ for (i in seq_along(drives)) {
   playsInDrive <-  length(unlist(drives[[i]]["statYardage"]))
   end <-  end + playsInDrive
 
-  type[start:end] <- drives[[i]][["type"]][["id"]]
+  type[start:end] <- as.integer(drives[[i]][["type"]][["id"]])
+  typeText[start:end] <- drives[[i]][["type"]][["text"]]
   yardage[start:end] <- drives[[i]][["statYardage"]]
   downAndDistBefore[start:end] <- as.character(drives[[i]][["start"]][["shortDownDistanceText"]])
   downAndDistAfter[start:end] <- drives[[i]][["end"]][["shortDownDistanceText"]]
@@ -44,10 +37,20 @@ for (i in seq_along(drives)) {
 }
 remove(i, start, end, playsInDrive)
 
-
-plays <- data.frame(type, text, yardage, downAndDistBefore, downAndDistAfter)
+# Construct data frame of plays
+plays <- data.frame(type, typeText, text, yardage, downAndDistBefore, downAndDistAfter)
 
 unique(plays$type)
+
+uniquePlayTypes <- plays %>% group_by(type) %>% 
+                              filter(row_number() == 1) %>% 
+                              select(type, typeText, text) %>% 
+                              ungroup() %>% 
+                              mutate(type = as.integer(type)) %>% 
+                              arrange(type)
+uniquePlayTypes
+                        
+
 
 
 # Add passer, receiver, rusher fields
@@ -55,6 +58,9 @@ plays$passer <- NA
 plays$receiver <- NA
 plays$rusher <- NA
 
+passingPlayIds <- c(3, 24)
+rushingPlayIds <- c(5, 7, 68)
 
+plays$test <- ifelse(plays$type %in% passingPlayIds, TRUE, FALSE)
 
 
