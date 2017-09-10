@@ -1,8 +1,18 @@
+# Runs code to prepare environment, set global options, load packages, etc.
 source("01_setup.R")
+
+# Define functions
+extract_play_data <- function(play_list){
+  
+  
+  
+  
+}
 
 # Read raw JSON data, create drives list
 gameData <- jsonlite::fromJSON("data\\VT-duke_2016.json")
 drives <- gameData[["drives"]][["previous"]][["plays"]]
+remove(gameData)
 
 # Create character vector of play text description
 # (also determines how many plays in game, making other vectors more efficient 
@@ -40,27 +50,33 @@ remove(i, start, end, playsInDrive)
 # Construct data frame of plays
 plays <- data.frame(type, typeText, text, yardage, downAndDistBefore, downAndDistAfter)
 
-unique(plays$type)
-
-uniquePlayTypes <- plays %>% group_by(type) %>% 
+(uniquePlayTypes <- plays %>% group_by(type) %>% 
                               filter(row_number() == 1) %>% 
                               select(type, typeText, text) %>% 
                               ungroup() %>% 
                               mutate(type = as.integer(type)) %>% 
-                              arrange(type)
-uniquePlayTypes
-                        
+                              arrange(type))
 
 
-
-# Add passer, receiver, rusher fields
-plays$passer <- NA
-plays$receiver <- NA
-plays$rusher <- NA
-
+# Add passer, receiver, rusher columns
 passingPlayIds <- c(3, 24)
 rushingPlayIds <- c(5, 7, 68)
 
-plays$test <- ifelse(plays$type %in% passingPlayIds, TRUE, FALSE)
+plays$passer <- ifelse(plays$type %in% passingPlayIds, str_extract(plays$text, "\\w+\\s?\\w+(?= pass)"), NA)
+plays$receiver <- ifelse(plays$type %in% passingPlayIds, str_extract(plays$text, "(?<=complete to )\\w+\\s?\\w+"), NA)
+plays$rusher <- ifelse(plays$type %in% rushingPlayIds, str_extract(plays$text, "\\w+\\s?\\w+(?= run)"), NA)
+
+# Calculate rushing totals
 
 
+
+
+(plays %>% filter(type %in% passingPlayIds) %>% select(text) %>% slice(1:20))
+
+names(y)
+
+(uniquePlayTypes <- y %>% group_by(type) %>% 
+    filter(row_number() == 1) %>% 
+    select(type, desc) %>% 
+    ungroup() %>% 
+    arrange(type))
