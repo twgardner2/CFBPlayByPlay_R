@@ -45,9 +45,9 @@ rushingPlayIds <- c(5, 7, 68)
 
 plays$passer <- ifelse(plays$type %in% passingPlayIds, str_extract(plays$text, "\\w+\\s?\\w+(?= pass)"), NA)
 plays$receiver <- ifelse(plays$type %in% passingPlayIds, str_extract(plays$text, "(?<=complete to )\\w+\\s?\\w+"), NA)
-plays$rusher <- ifelse(plays$type %in% rushingPlayIds, str_extract(plays$text, "\\w+\\s?\\w+(?= run)"), NA)
+plays$rusher <- ifelse(plays$type %in% rushingPlayIds, str_extract(plays$text, "\\w+\\s?\\w+((?= run)|(?= sacked))"), NA)
 
-
+plays %>% filter(type==7) %>% select(rusher)
 # Calculate rushing totals
 rushingTotals <- plays %>% filter(type %in% rushingPlayIds) %>% 
                             group_by(abbreviation, rusher) %>% 
